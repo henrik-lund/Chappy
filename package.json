@@ -1,0 +1,12 @@
+{
+	"name": "chappy",
+	"private": true,
+	"type": "module",
+	"workspaces": ["frontend", "backend", "packages/shared"],
+	"scripts": {
+		"dev:frontend": "npm run dev --workspace=frontend",
+		"restart:backend": "npm run restart --workspace=backend",
+		"build": "npm run build --workspaces",
+		"restart-server": "npm run build --workspace=frontend && npm run restart --workspace=backend"
+	}
+}
