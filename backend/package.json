@@ -5,7 +5,9 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "restart": "tsc && node --env-file=../.env dist/backend/src/server.js"
+    "build": "tsc",
+    "start": "node --env-file-if-exists=../.env dist/backend/src/server.js",
+    "restart": "npm run build && npm run start"
   },
   "keywords": [],
   "author": "",
@@ -14,5 +16,11 @@
     "@types/express": "^5.0.6",
     "@types/node": "^26.6.5",
     "typescript": "^7.0.2"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.1155.0",
+    "@aws-sdk/lib-dynamodb": "^3.1155.0",
+    "express": "^5.3.0",
+    "zod": "^4.6.7"
   }
 }
