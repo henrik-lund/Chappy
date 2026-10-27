@@ -5,10 +5,13 @@ import { logger } from "./middleware.js"
 import path from "node:path"
 import userRouter from "./routes/users.js"
 
+import fs from "fs"
+
+
 const app: Express = express()
 const port: number = getPort()
 const distPath: string = path.resolve(import.meta.dirname, "../../../frontend/dist")
-
+console.log("distPath:", distPath, "finns:", fs.existsSync(distPath))
 app.use(express.static(distPath))
 app.use("/", logger)
 
