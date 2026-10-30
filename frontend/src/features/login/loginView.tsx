@@ -1,7 +1,7 @@
 import "./loginView.css"
 import { useState } from "react"
 import logo from '../../assets/logo.svg'
-import { useNavigate } from 'react-router'
+// import { useNavigate } from 'react-router'
 
 
 type Mode = "login" | "register"
