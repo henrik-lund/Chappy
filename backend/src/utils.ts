@@ -24,3 +24,7 @@ export function getAwsConfig() {
 export function getTableName(): string {
 	return getEnv('TABLE_NAME')
 }
+
+export function getJwtSecret(): string {
+	return getEnv('JWT_SECRET')
+}

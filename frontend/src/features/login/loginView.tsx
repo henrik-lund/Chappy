@@ -1,7 +1,9 @@
 import "./loginView.css"
 import { useState } from "react"
+import type { FormEvent } from "react"
+import { useNavigate } from 'react-router'
+import { loginSchema, registerSchema } from "shared"
 import logo from '../../assets/logo.svg'
-// import { useNavigate } from 'react-router'
 
 
 type Mode = "login" | "register"
@@ -10,7 +12,48 @@ export function LoginPage() {
 	const [mode, setMode ] = useState<Mode>("login")
 	const [username, setUsername] = useState("")
 	const [password, setPassword] = useState("")
+	const [error, setError] = useState("")
+	const [info, setInfo] = useState("")
+	const navigate = useNavigate()
 	
+	async function handleSubmit(event:FormEvent) {
+		event.preventDefault()
+		setError("")
+		setInfo("")
+
+		const schema = mode === "login" ? loginSchema : registerSchema
+		const parsed = schema.safeParse({ username, password })
+		if (!parsed.success) {
+			setError(parsed.error.issues[0]?.message ?? "Ogiltiga uppgifter")
+			return
+		}
+
+		const url = mode === "login" ? "/api/auth/login" : "/api/auth/register"
+		try {
+
+				const response = await fetch (url, {
+					method: "POST",
+					headers: {"Content-Type": "application/json"},
+					body: JSON.stringify(parsed.data)
+				})
+		
+				const data = await response.json()
+				if(!response.ok){
+					setError(data.error ?? "Något gick fel");
+					return
+				}
+		
+				if (mode === "register") {
+					setInfo("Kontot är skapat! Logga in.")
+					setMode("login")
+					setPassword("")
+				} else {
+					navigate ("/")
+			}
+		} catch {
+			setError ("Något gick fel. Försök igen")
+		}
+	}
 
 	return(
 		<main className="login-page">
@@ -40,7 +83,7 @@ export function LoginPage() {
 					>Registrera</button>
 				</div>
 
-				<form>
+				<form onSubmit={handleSubmit}>
 					<label>
 						Användarnamn
 						<input value={username} onChange={e => setUsername(e.target.value)} />
@@ -50,14 +93,15 @@ export function LoginPage() {
 						<input type="password" value={password} onChange={e => setPassword(e.target.value)} />
 					</label>
 
-					
+					{error && <p className="error">{error}</p>}
+					{info && <p className="info">{info}</p>}
 
 					<button type="submit" className="btn-primary">
 						{mode === 'login' ? 'Logga in' : 'Registrera'}
 					</button>
 				</form>
 
-				<button className="btn-secondary">
+				<button className="btn-secondary" onClick={() => navigate ("/")}>
 					Fortsätt som gäst
 				</button>
 			</section>

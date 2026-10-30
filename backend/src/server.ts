@@ -4,16 +4,18 @@ import { getPort } from "./utils.js"
 import { logger } from "./middleware.js"
 import path from "node:path"
 import userRouter from "./routes/users.js"
-
+import authRouter from "./routes/auth.js"
 
 
 const app: Express = express()
 const port: number = getPort()
 const distPath: string = path.resolve(import.meta.dirname, "../../../../frontend/dist")
+app.use(express.json())
 app.use(express.static(distPath))
 app.use("/", logger)
 
 app.use("/api/users", userRouter)
+app.use("/api/auth", authRouter)
 
 app.listen(port, () =>{
 	console.log(`Server is listening on port ${port}`)
