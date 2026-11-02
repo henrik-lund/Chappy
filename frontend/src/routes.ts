@@ -1,5 +1,6 @@
 import type { RouteObject } from "react-router"
 import LoginView from "./pages/LoginView"
+import { ChatView } from "./features/chat/ChatView"
 import App from "./App"
 
 const routerConfig: RouteObject[] = [
@@ -14,6 +15,10 @@ const routerConfig: RouteObject[] = [
 			{
 				path: "login",
 				Component: LoginView
+			},
+			{
+				path: "chat",
+				Component: ChatView
 			}
 		]
 	}

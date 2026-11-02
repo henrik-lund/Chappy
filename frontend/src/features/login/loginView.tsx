@@ -101,7 +101,7 @@ export function LoginPage() {
 					</button>
 				</form>
 
-				<button className="btn-secondary" onClick={() => navigate ("/")}>
+				<button className="btn-secondary" onClick={() => navigate ("/chat")}>
 					Fortsätt som gäst
 				</button>
 			</section>
