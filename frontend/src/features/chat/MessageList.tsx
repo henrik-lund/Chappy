@@ -1,0 +1,32 @@
+import type { Message, User } from "shared"
+
+type Props = {
+	messages: Message[]
+	users: User[]
+	currentUserId: string
+}
+
+function formatTime(iso: string): string {
+	return new Date(iso).toLocaleTimeString("sv-SE", { hour: "2-digit", minute: "2-digit" })
+}
+
+export function MessageList({ messages, users, currentUserId }: Props) {
+	return (
+		<div className="message-list">
+			{messages.map(message => {
+				const sender = users.find(u => u.userId === message.senderId)
+				const isOwn = message.senderId === currentUserId
+
+				return (
+					<div key={message.messageId} className={isOwn ? "message own" : "message"}>
+						<div className="message-meta">
+							<strong>{isOwn ? "Du" : sender?.username ?? "Okänd"}</strong>
+							<span>{formatTime(message.createdAt)}</span>
+						</div>
+						<p className="bubble">{message.text}</p>
+					</div>
+				)
+			})}
+		</div>
+	)
+}
