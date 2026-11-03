@@ -3,6 +3,7 @@ import { useState } from "react"
 import type { FormEvent } from "react"
 import { useNavigate, useSearchParams } from "react-router"
 import { loginSchema, registerSchema } from "shared"
+import {useAuthStore} from "../../store/authStore"
 import logo from "../../assets/logo.svg"
 
 type Mode = "login" | "register"
@@ -17,6 +18,7 @@ export function LoginPage() {
 	const [error, setError] = useState("")
 	const [info, setInfo] = useState("")
 	const navigate = useNavigate()
+	const login = useAuthStore(state => state.login)
 
 	async function handleSubmit(event: FormEvent) {
 		event.preventDefault()
@@ -52,6 +54,7 @@ export function LoginPage() {
 				setMode("login")
 				setPassword("")
 			} else {
+				login(data.user, data.token)
 				navigate("/chat")
 			}
 		} catch {

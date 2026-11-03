@@ -5,10 +5,12 @@ import {ChannelHeader} from "./ChannelHeader"
 import {MessageList} from "./MessageList"
 import {MessageInput} from "./MessageInput"
 import {mockChannels, mockMessages, mockUsers} from "./mockData"
+import {useAuthStore} from "../../store/authStore"
 import "./chat.css"
 
 export function ChatView() { 
 	const [activeChannel, setActiveChannel] = useState<Channel>(mockChannels[0]!)
+	const user = useAuthStore(state => state.user)
 
 	return (
 		<div className="chat-layout">
@@ -20,9 +22,9 @@ export function ChatView() {
 			/>
 			<main className="chat-main">
 				<ChannelHeader channel={activeChannel} />
-				<MessageList messages={mockMessages} users={mockUsers} currentUserId="u1"/>
+				<MessageList messages={mockMessages} users={mockUsers} currentUserId={user?.userId ?? ""} />
 				<MessageInput 
-					placeholder= {`Skriv i #${activeChannel.name}...`}
+					placeholder={`Skriv ett meddelande i #${activeChannel.name}${user ? "" : " som gäst"}…`}
 					onSend={text => console.log("Skicka:", text)}
 					/>
 			</main>
