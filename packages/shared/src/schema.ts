@@ -22,15 +22,15 @@ export const createChannelSchema = z.object ({
 //---------------- Meddelanden --------------
 
 export const messageSchema = z.object({
-	text: z.string().trim().min(1, "Meddelandet får inte vara tomt").max(1000, "Meddalndet får vara max 1000 tecken")
+	text: z.string().trim().min(1, "Meddelandet får inte vara tomt").max(1000, "Meddelandet får vara max 1000 tecken")
 })
 
 //-------------------------------------------
 
 export type RegisterBody = z.infer < typeof registerSchema >
-export type LoginBody = z.input < typeof loginSchema >
-export type CreateChannelBody = z.input < typeof createChannelSchema >
-export type MessageBody = z.input < typeof messageSchema >
+export type LoginBody = z.infer < typeof loginSchema >
+export type CreateChannelBody = z.infer < typeof createChannelSchema >
+export type MessageBody = z.infer < typeof messageSchema >
 
 export type User = {
 	userId: string
