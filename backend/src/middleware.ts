@@ -1,5 +1,6 @@
 import type { RequestHandler } from "express"
-
+import jwt from "jsonwebtoken"
+import {getJwtSecret} from "./utils.js"
 
 export function formatTimestamp(date: Date = new Date()): string {
 	const pad = (n: number) => String(n).padStart(2, '0')
@@ -16,5 +17,25 @@ export function formatTimestamp(date: Date = new Date()): string {
 export const logger: RequestHandler = (req, res, next) => {
 	const now = formatTimestamp()
 	console.log(`${now}  ${req.method}  ${req.url}`)
+	next()
+}
+
+type JwtPayload = {
+	userId: string
+	username: string
+}
+
+export const readUser: RequestHandler = (req, res, next) => {
+	const header = req.headers.authorization
+
+	if(header?.startsWith("Bearer ")) {
+		const token = header.substring(7)
+		try{
+			const payload = jwt.verify(token, getJwtSecret()) as JwtPayload
+			res.locals.user = { userId: payload.userId, username: payload.username}
+		} catch (error) {
+			console.error("Invalid token")
+		}
+	}
 	next()
 }

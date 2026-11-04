@@ -3,10 +3,9 @@
 	height: 100vh;
 }
 
-/* Sidomeny */
 .sidebar {
 	width: 260px;
-	background: #1E1B4B;
+	background: #2E2C48;
 	color: #C7D2FE;
 	display: flex;
 	flex-direction: column;
@@ -302,4 +301,17 @@
 .send-button img {
 	width: 22px;
 	height: 22px;
+}
+
+.loading {
+	margin: auto;
+	color: #64748B;
+}
+
+.locked-message {
+	flex: 1;
+	display: grid;
+	place-items: center;
+	color: #64748B;
+	font-size: 15px;
 }

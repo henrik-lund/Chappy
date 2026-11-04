@@ -20,7 +20,9 @@ export function MessageList({ messages, users, currentUserId }: Props) {
 				return (
 					<div key={message.messageId} className={isOwn ? "message own" : "message"}>
 						<div className="message-meta">
-							<strong>{isOwn ? "Du" : sender?.username ?? "Okänd"}</strong>
+							<strong>
+								{isOwn ? "Du" : message.senderId === "guest" ? "Gäst" : sender?.username ?? "Okänd"}
+							</strong>
 							<span>{formatTime(message.createdAt)}</span>
 						</div>
 						<p className="bubble">{message.text}</p>
