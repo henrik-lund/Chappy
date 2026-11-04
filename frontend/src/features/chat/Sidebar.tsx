@@ -1,19 +1,28 @@
 import { useNavigate } from "react-router"
 import type { Channel, User } from "shared"
-import {useAuthStore} from "../../store/authStore"
+import type { Conversation } from "./ChatView"
+import { useAuthStore } from "../../store/authStore"
 import logo from "../../assets/logo.svg"
 
 type Props = {
 	channels: Channel[]
 	users: User[]
-	activeChannelId: string
-	onSelectChannel: (channel: Channel) => void
+	active: Conversation | null
+	onSelect: (conversation: Conversation) => void
 }
 
-export function Sidebar({ channels, users, activeChannelId, onSelectChannel }: Props) {
+export function Sidebar({ channels, users, active, onSelect }: Props) {
 	const navigate = useNavigate()
 	const user = useAuthStore(state => state.user)
 	const logout = useAuthStore(state => state.logout)
+
+	// Visa inte mig själv i DM-listan
+	const otherUsers = users.filter(u => u.userId !== user?.userId)
+
+	function handleLogout() {
+		logout()
+		navigate("/")
+	}
 
 	return (
 		<aside className="sidebar">
@@ -23,31 +32,44 @@ export function Sidebar({ channels, users, activeChannelId, onSelectChannel }: P
 					<span>Chappy</span>
 				</div>
 
+			
 				<section>
 					<h2 className="sidebar-title">Kanaler</h2>
-					{channels.map(channel => (
-						<button
-							key={channel.channelId}
-							className={channel.channelId === activeChannelId ? "sidebar-item active" : "sidebar-item"}
-							onClick={() => onSelectChannel(channel)}
-						>
-							<span className="sidebar-icon">{channel.isLocked ? "🔒" : "#"}</span>
-							{channel.name}
-						</button>
-					))}
+					{channels.map(channel => {
+						const isActive = active?.type === "channel" && active.channel.channelId === channel.channelId
+						return (
+							<button
+								key={channel.channelId}
+								className={isActive ? "sidebar-item active" : "sidebar-item"}
+								onClick={() => onSelect({ type: "channel", channel })}
+							>
+								<span className="sidebar-icon">{channel.isLocked ? "🔒" : "#"}</span>
+								{channel.name}
+							</button>
+						)
+					})}
 				</section>
 
+				
 				<section>
 					<h2 className="sidebar-title">Direktmeddelanden</h2>
-					{users.map(user => (
-						<button key={user.userId} className="sidebar-item">
-							<span className="avatar">{user.username.slice(0, 2).toUpperCase()}</span>
-							{user.username}
-						</button>
-					))}
+					{otherUsers.map(u => {
+						const isActive = active?.type === "dm" && active.user.userId === u.userId
+						return (
+							<button
+								key={u.userId}
+								className={isActive ? "sidebar-item active" : "sidebar-item"}
+								onClick={() => onSelect({ type: "dm", user: u })}
+							>
+								<span className="avatar">{u.username.slice(0, 2).toUpperCase()}</span>
+								{u.username}
+							</button>
+						)
+					})}
 				</section>
 			</div>
 
+			
 			{user ? (
 				<div className="user-card">
 					<span className="avatar">{user.username.slice(0, 2).toUpperCase()}</span>
@@ -55,16 +77,17 @@ export function Sidebar({ channels, users, activeChannelId, onSelectChannel }: P
 						<strong>{user.username}</strong>
 						<span>● Inloggad</span>
 					</div>
-					<button className="logout-btn" onClick={() => {
-						logout()
-						navigate("/")
-					}}>Logga ut</button>
+					<button className="logout-btn" onClick={handleLogout}>Logga ut</button>
 				</div>
 			) : (
 				<div className="guest-card">
 					<p>Du är gäst. Logga in för att läsa låsta kanaler och skicka DM.</p>
-					<button className="guest-btn primary" onClick={() => navigate("/login")}>Logga in</button>
-					<button className="guest-btn outline" onClick={() => navigate("/login?mode=register")}>Registrera konto</button>
+					<button className="guest-btn primary" onClick={() => navigate("/login")}>
+						Logga in
+					</button>
+					<button className="guest-btn outline" onClick={() => navigate("/login?mode=register")}>
+						Registrera konto
+					</button>
 				</div>
 			)}
 		</aside>

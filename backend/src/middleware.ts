@@ -39,3 +39,11 @@ export const readUser: RequestHandler = (req, res, next) => {
 	}
 	next()
 }
+
+export const requireAuth: RequestHandler = (req, res, next) => {
+	if (!res.locals.user) {
+		res.status(401).send({ error: "Du måste vara inloggad" })
+		return
+	}
+	next()
+}

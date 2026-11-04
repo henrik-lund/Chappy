@@ -7,10 +7,21 @@ import { MessageInput } from "./MessageInput"
 import { useAuthStore } from "../../store/authStore"
 import "./chat.css"
 
+export type Conversation =
+	| { type: "channel"; channel: Channel }
+	| { type: "dm"; user: User }
+
+// Rätt adress beroende på vad som är öppet
+function getMessagesUrl(conversation: Conversation): string {
+	return conversation.type === "channel"
+		? `/api/channels/${conversation.channel.channelId}/messages`
+		: `/api/dm/${conversation.user.userId}`
+}
+
 export function ChatView() {
 	const [channels, setChannels] = useState<Channel[]>([])
 	const [users, setUsers] = useState<User[]>([])
-	const [activeChannel, setActiveChannel] = useState<Channel | null>(null)
+	const [active, setActive] = useState<Conversation | null>(null)
 	const [messages, setMessages] = useState<Message[]>([])
 	const [error, setError] = useState("")
 	const user = useAuthStore(state => state.user)
@@ -28,21 +39,21 @@ export function ChatView() {
 			const channelData: Channel[] = await channelRes.json()
 			setChannels(channelData)
 			setUsers(await userRes.json())
-			setActiveChannel(channelData[0] ?? null)
+			if (channelData[0]) {
+				setActive({ type: "channel", channel: channelData[0] })
+			}
 		}
 		fetchData()
 	}, [])
 
-	// 2. Hämta meddelanden varje gång kanalen eller inloggningen byts
+	// 2. Hämta meddelanden när konversationen eller inloggningen ändras
 	useEffect(() => {
-		if (!activeChannel) return
+		if (!active) return
 
 		async function fetchMessages() {
 			setError("")
 			setMessages([])
-			const response = await fetch(`/api/channels/${activeChannel!.channelId}/messages`, {
-				headers: authHeader
-			})
+			const response = await fetch(getMessagesUrl(active!), { headers: authHeader })
 			const data = await response.json()
 
 			if (!response.ok) {
@@ -52,13 +63,13 @@ export function ChatView() {
 			setMessages(data)
 		}
 		fetchMessages()
-	}, [activeChannel, token])
+	}, [active, token])
 
 	// 3. Skicka meddelande
 	async function handleSend(text: string) {
-		if (!activeChannel) return
+		if (!active) return
 
-		const response = await fetch(`/api/channels/${activeChannel.channelId}/messages`, {
+		const response = await fetch(getMessagesUrl(active), {
 			method: "POST",
 			headers: { "Content-Type": "application/json", ...authHeader },
 			body: JSON.stringify({ text })
@@ -72,34 +83,48 @@ export function ChatView() {
 		setMessages(prev => [...prev, data])
 	}
 
+	// Text i skrivfältet
+	const placeholder = !active
+		? ""
+		: active.type === "channel"
+			? `Skriv ett meddelande i #${active.channel.name}${user ? "" : " som gäst"}…`
+			: `Skriv till ${active.user.username}…`
+
 	return (
 		<div className="chat-layout">
 			<Sidebar
 				channels={channels}
 				users={users}
-				activeChannelId={activeChannel?.channelId ?? ""}
-				onSelectChannel={setActiveChannel}
+				active={active}
+				onSelect={setActive}
 			/>
 			<main className="chat-main">
-				{activeChannel ? (
+				{active ? (
 					<>
-						<ChannelHeader channel={activeChannel} />
+						{active.type === "channel" ? (
+							<ChannelHeader channel={active.channel} />
+						) : (
+							<header className="channel-header">
+								<div>
+									<h1>{active.user.username}</h1>
+									<p>Direktmeddelande · bara ni två ser detta</p>
+								</div>
+							</header>
+						)}
+
 						{error ? (
 							<div className="locked-message">
 								<p>🔒 {error}</p>
 							</div>
 						) : (
-							<MessageList messages={messages} users={users} currentUserId={user?.userId ?? ""} />
-						)}
-						{!error && (
-							<MessageInput
-								placeholder={`Skriv ett meddelande i #${activeChannel.name}${user ? "" : " som gäst"}…`}
-								onSend={handleSend}
-							/>
+							<>
+								<MessageList messages={messages} users={users} currentUserId={user?.userId ?? ""} />
+								<MessageInput placeholder={placeholder} onSend={handleSend} />
+							</>
 						)}
 					</>
 				) : (
-					<p className="loading">Laddar kanaler…</p>
+					<p className="loading">Laddar…</p>
 				)}
 			</main>
 		</div>

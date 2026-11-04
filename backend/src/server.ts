@@ -6,6 +6,7 @@ import path from "node:path"
 import userRouter from "./routes/users.js"
 import authRouter from "./routes/auth.js"
 import channelRouter from "./routes/channels.js"
+import dmRouter from "./routes/dm.js"
 
 
 
@@ -20,6 +21,7 @@ app.use("/", readUser)
 app.use("/api/users", userRouter)
 app.use("/api/auth", authRouter)
 app.use("/api/channels", channelRouter)
+app.use("/api/dm", dmRouter)
 
 
 app.listen(port, () =>{
