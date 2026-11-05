@@ -315,3 +315,46 @@
 	color: #64748B;
 	font-size: 15px;
 }
+
+.summary-card {
+	margin: 20px 28px 0;
+	padding: 16px 20px;
+	border-radius: 12px;
+	background: #F5F3FF;
+	border: 1px solid #DDD6FE;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.summary-head {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	color: #6D28D9;
+	font-size: 13px;
+}
+
+.summary-head button {
+	border: none;
+	background: none;
+	color: #A78BFA;
+	font-size: 18px;
+	cursor: pointer;
+}
+
+.summary-card p {
+	color: #312E81;
+	font-size: 14px;
+	line-height: 1.5;
+}
+
+.summary-card span {
+	color: #8B5CF6;
+	font-size: 12px;
+}
+
+.btn-primary:disabled {
+	opacity: 0.6;
+	cursor: wait;
+}

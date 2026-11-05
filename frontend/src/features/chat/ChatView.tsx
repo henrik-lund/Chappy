@@ -11,7 +11,6 @@ export type Conversation =
 	| { type: "channel"; channel: Channel }
 	| { type: "dm"; user: User }
 
-// Rätt adress beroende på vad som är öppet
 function getMessagesUrl(conversation: Conversation): string {
 	return conversation.type === "channel"
 		? `/api/channels/${conversation.channel.channelId}/messages`
@@ -25,6 +24,8 @@ export function ChatView() {
 	const [messages, setMessages] = useState<Message[]>([])
 	const [error, setError] = useState("")
 	const [sentIds, setSentIds] = useState<string[]>([])
+	const [summary, setSummary] = useState("")
+	const [summaryLoading, setSummaryLoading] = useState(false)
 	const user = useAuthStore(state => state.user)
 	const token = useAuthStore(state => state.token)
 
@@ -53,6 +54,7 @@ export function ChatView() {
 
 		async function fetchMessages() {
 			setError("")
+			setSummary("")
 			setMessages([])
 			const response = await fetch(getMessagesUrl(active!), { headers: authHeader })
 			const data = await response.json()
@@ -85,6 +87,24 @@ export function ChatView() {
 		setSentIds(prev => [...prev, data.messageId])
 	}
 
+	// 4. AI-sammanfattning
+	async function handleSummarize() {
+		if (active?.type !== "channel") return
+		setSummaryLoading(true)
+
+		try {
+			const response = await fetch(`/api/channels/${active.channel.channelId}/summary`, {
+				headers: authHeader
+			})
+			const data = await response.json()
+			setSummary(response.ok ? data.summary : data.error ?? "Något gick fel")
+		} catch {
+			setSummary("Kunde inte nå servern")
+		} finally {
+			setSummaryLoading(false)
+		}
+	}
+
 	// Text i skrivfältet
 	const placeholder = !active
 		? ""
@@ -104,7 +124,23 @@ export function ChatView() {
 				{active ? (
 					<>
 						{active.type === "channel" ? (
-							<ChannelHeader channel={active.channel} />
+							<>
+								<ChannelHeader
+									channel={active.channel}
+									onSummarize={handleSummarize}
+									loading={summaryLoading}
+								/>
+								{summary && (
+									<div className="summary-card">
+										<div className="summary-head">
+											<strong>✨ AI-sammanfattning</strong>
+											<button onClick={() => setSummary("")} aria-label="Stäng">x</button>
+										</div>
+										<p>{summary}</p>
+										<span>Genererad av Gemini</span>
+									</div>
+								)}
+							</>
 						) : (
 							<header className="channel-header">
 								<div>
@@ -120,11 +156,11 @@ export function ChatView() {
 							</div>
 						) : (
 							<>
-								<MessageList 
-								messages={messages} 
-								users={users} 
-								currentUserId={user?.userId ?? ""}
-								sentIds={sentIds}
+								<MessageList
+									messages={messages}
+									users={users}
+									currentUserId={user?.userId ?? ""}
+									sentIds={sentIds}
 								/>
 								<MessageInput placeholder={placeholder} onSend={handleSend} />
 							</>
