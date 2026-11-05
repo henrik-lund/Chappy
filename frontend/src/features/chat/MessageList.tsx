@@ -4,18 +4,19 @@ type Props = {
 	messages: Message[]
 	users: User[]
 	currentUserId: string
+	sentIds: string[]
 }
 
 function formatTime(iso: string): string {
 	return new Date(iso).toLocaleTimeString("sv-SE", { hour: "2-digit", minute: "2-digit" })
 }
 
-export function MessageList({ messages, users, currentUserId }: Props) {
+export function MessageList({ messages, users, currentUserId, sentIds }: Props) {
 	return (
 		<div className="message-list">
 			{messages.map(message => {
 				const sender = users.find(u => u.userId === message.senderId)
-				const isOwn = message.senderId === currentUserId
+				const isOwn = message.senderId === currentUserId || sentIds.includes(message.messageId)
 
 				return (
 					<div key={message.messageId} className={isOwn ? "message own" : "message"}>

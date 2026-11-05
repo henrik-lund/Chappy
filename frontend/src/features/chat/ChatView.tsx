@@ -24,6 +24,7 @@ export function ChatView() {
 	const [active, setActive] = useState<Conversation | null>(null)
 	const [messages, setMessages] = useState<Message[]>([])
 	const [error, setError] = useState("")
+	const [sentIds, setSentIds] = useState<string[]>([])
 	const user = useAuthStore(state => state.user)
 	const token = useAuthStore(state => state.token)
 
@@ -81,6 +82,7 @@ export function ChatView() {
 			return
 		}
 		setMessages(prev => [...prev, data])
+		setSentIds(prev => [...prev, data.messageId])
 	}
 
 	// Text i skrivfältet
@@ -118,7 +120,12 @@ export function ChatView() {
 							</div>
 						) : (
 							<>
-								<MessageList messages={messages} users={users} currentUserId={user?.userId ?? ""} />
+								<MessageList 
+								messages={messages} 
+								users={users} 
+								currentUserId={user?.userId ?? ""}
+								sentIds={sentIds}
+								/>
 								<MessageInput placeholder={placeholder} onSend={handleSend} />
 							</>
 						)}
