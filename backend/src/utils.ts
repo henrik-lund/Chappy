@@ -28,3 +28,7 @@ export function getTableName(): string {
 export function getJwtSecret(): string {
 	return getEnv('JWT_SECRET')
 }
+
+export function getGeminiKey(): string {
+	return getEnv('GEMINI_API_KEY')
+}

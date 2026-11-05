@@ -4,6 +4,7 @@ import { QueryCommand, GetCommand, PutCommand } from "@aws-sdk/lib-dynamodb"
 import type { Channel, Message } from "shared"
 import { messageSchema } from "shared"
 import { db, tableName } from "../data/dynamoDb.js"
+import { summarize } from "../data/gemini.js"
 
 const router: Router = express.Router()
 
@@ -15,6 +16,29 @@ async function getChannel(channelId: string) {
 		Key: { pk: "CHANNEL", sk: `CHANNEL#${channelId}` }
 	}))
 	return result.Item
+}
+
+async function getChannelMessages(channelId: string): Promise<Message[]> {
+	const result = await db.send(new QueryCommand({
+		TableName: tableName,
+		KeyConditionExpression: "pk = :pk AND begins_with(sk, :prefix)",
+		ExpressionAttributeValues: { ":pk": `CHANNEL#${channelId}`, ":prefix": "MSG#" }
+	}))
+	return (result.Items ?? []).map(item => ({
+		messageId: item.messageId,
+		senderId: item.senderId,
+		text: item.text,
+		createdAt: item.createdAt
+	}))
+}
+
+async function getUsernames(): Promise<Map<string, string>> {
+	const result = await db.send(new QueryCommand({
+		TableName: tableName,
+		KeyConditionExpression: "pk = :pk",
+		ExpressionAttributeValues: { ":pk": "USER" }
+	}))
+	return new Map((result.Items ?? []).map(item => [item.userId, item.username]))
 }
 
 // GET /api/channels
@@ -48,18 +72,7 @@ router.get("/:channelId/messages", async (req: Request<ChannelParams>, res: Resp
 		return
 	}
 
-	const result = await db.send(new QueryCommand({
-		TableName: tableName,
-		KeyConditionExpression: "pk = :pk AND begins_with(sk, :prefix)",
-		ExpressionAttributeValues: { ":pk": `CHANNEL#${channelId}`, ":prefix": "MSG#" }
-	}))
-
-	const messages: Message[] = (result.Items ?? []).map(item => ({
-		messageId: item.messageId,
-		senderId: item.senderId,
-		text: item.text,
-		createdAt: item.createdAt
-	}))
+	const messages = await getChannelMessages(channelId)
 	res.send(messages)
 })
 
@@ -100,6 +113,41 @@ router.post("/:channelId/messages", async (req: Request<ChannelParams>, res: Res
 	}))
 
 	res.status(201).send(message)
+})
+
+// GET /api/channels/:channelId/summary
+router.get("/:channelId/summary", async (req: Request<ChannelParams>, res: Response) => {
+	const { channelId } = req.params
+
+	const channel = await getChannel(channelId)
+	if (!channel) {
+		res.status(404).send({ error: "Kanalen finns inte" })
+		return
+	}
+	if (channel.isLocked && !res.locals.user) {
+		res.status(401).send({ error: "Logga in för att sammanfatta den här kanalen" })
+		return
+	}
+
+	const messages = await getChannelMessages(channelId)
+	if (messages.length === 0) {
+		res.send({ summary: "Finns inget att sammanfatta ännu." })
+		return
+	}
+
+	const names = await getUsernames()
+	const conversation = messages
+		.slice(-50)
+		.map(m => `${names.get(m.senderId) ?? "Gäst"}: ${m.text}`)
+		.join("\n")
+
+	try {
+		const summary = await summarize(conversation)
+		res.send({ summary })
+	} catch (error) {
+		console.error("Gemini-fel:", error)
+		res.status(502).send({ error: "Tjänsten för sammanfattning är inte tillgänglig just nu. Försök igen senare." })
+	}
 })
 
 export default router
