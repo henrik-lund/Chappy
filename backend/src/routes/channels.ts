@@ -2,9 +2,10 @@ import express from "express"
 import type { Router, Request, Response } from "express"
 import { QueryCommand, GetCommand, PutCommand } from "@aws-sdk/lib-dynamodb"
 import type { Channel, Message } from "shared"
-import { messageSchema } from "shared"
+import { messageSchema, createChannelSchema } from "shared"
 import { db, tableName } from "../data/dynamoDb.js"
 import { summarize } from "../data/gemini.js"
+import { requireAuth } from "../middleware.js"
 
 const router: Router = express.Router()
 
@@ -56,6 +57,33 @@ router.get("/", async (req: Request, res: Response) => {
 		creatorId: item.creatorId
 	}))
 	res.send(channels)
+})
+
+
+// POST /api/channels 
+router.post("/", requireAuth, async (req: Request, res: Response) => {
+	const parsed = createChannelSchema.safeParse(req.body)
+	if (!parsed.success) {
+		res.status(400).send({error: parsed.error.issues[0]?.message})
+		return
+	}
+
+	const channel: Channel = {
+		channelId: crypto.randomUUID(),
+		name: parsed.data.name,
+		isLocked: parsed.data.isLocked,
+		creatorId: res.locals.user.userId
+	}
+
+	await db.send( new PutCommand({
+		TableName: tableName,
+		Item: {
+			pk: "CHANNEL",
+			sk: `CHANNEL#${channel.channelId}`,
+			...channel
+		}
+	}))
+	res.status(201).send(channel)
 })
 
 // GET /api/channels/:channelId/messages
