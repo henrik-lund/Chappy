@@ -1,6 +1,6 @@
 import "./loginView.css"
 import { useState } from "react"
-import type { FormEvent } from "react"
+import type { SubmitEvent } from "react"
 import { useNavigate, useSearchParams } from "react-router"
 import { loginSchema, registerSchema } from "shared"
 import {useAuthStore} from "../../store/authStore"
@@ -20,7 +20,7 @@ export function LoginPage() {
 	const navigate = useNavigate()
 	const login = useAuthStore(state => state.login)
 
-	async function handleSubmit(event: FormEvent) {
+	async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
 		event.preventDefault()
 		setError("")
 		setInfo("")

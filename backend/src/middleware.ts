@@ -25,6 +25,7 @@ type JwtPayload = {
 	username: string
 }
 
+
 export const readUser: RequestHandler = (req, res, next) => {
 	const header = req.headers.authorization
 
@@ -40,6 +41,7 @@ export const readUser: RequestHandler = (req, res, next) => {
 	next()
 }
 
+//Stoppar alla som inte är inloggade. Används för DM, låsta kanaler och skapa kanaler
 export const requireAuth: RequestHandler = (req, res, next) => {
 	if (!res.locals.user) {
 		res.status(401).send({ error: "Du måste vara inloggad" })

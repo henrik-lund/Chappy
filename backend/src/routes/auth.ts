@@ -9,6 +9,7 @@ import { getJwtSecret } from "../utils.js"
 
 const router: Router = express.Router()
 
+// Hitta en användare
 async function findUserByName(username: string) {
 	const result = await db.send(new QueryCommand({
 		TableName: tableName,
@@ -31,7 +32,7 @@ router.post("/register", async (req: Request, res: Response) => {
 	const { username, password } = parsed.data
 
 	if(await findUserByName(username)) {
-		res.status(409).send({ error: "Användarenamnet är upptaget"})
+		res.status(409).send({ error: "Användarnamnet är upptaget"})
 		return
 	}
 

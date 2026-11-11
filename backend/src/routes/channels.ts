@@ -19,6 +19,7 @@ async function getChannel(channelId: string) {
 	return result.Item
 }
 
+//Hämta alla meddelanden i en kanal
 async function getChannelMessages(channelId: string): Promise<Message[]> {
 	const result = await db.send(new QueryCommand({
 		TableName: tableName,

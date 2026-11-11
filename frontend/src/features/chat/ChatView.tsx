@@ -11,6 +11,7 @@ export type Conversation =
 	| { type: "channel"; channel: Channel }
 	| { type: "dm"; user: User }
 
+// Hjälp funktion som väljer rätt adress till backend
 function getMessagesUrl(conversation: Conversation): string {
 	return conversation.type === "channel"
 		? `/api/channels/${conversation.channel.channelId}/messages`
@@ -105,6 +106,24 @@ export function ChatView() {
 		}
 	}
 
+	// Skapa ny kanal 
+	async function handleCreateChannel(name:string, isLocked: boolean): Promise <string | null> {
+		const response = await fetch ("/api/channels", {
+			method: "POST",
+			headers: {"Content-Type": "application/json", ...authHeader},
+			body: JSON.stringify({name, isLocked})
+		})
+		const data = await response.json()
+
+		if(!response.ok) {
+			return data.error ?? "Kunde inte skapa kanalen"
+		}
+
+		setChannels(prev => [...prev, data])
+		setActive({type: "channel", channel: data})
+		return null
+	}
+
 	// Text i skrivfältet
 	const placeholder = !active
 		? ""
@@ -119,6 +138,7 @@ export function ChatView() {
 				users={users}
 				active={active}
 				onSelect={setActive}
+				onCreateChannel={handleCreateChannel}
 			/>
 			<main className="chat-main">
 				{active ? (
