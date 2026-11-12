@@ -1,8 +1,8 @@
 import express from "express"
 import type { Router, Request, Response } from "express"
-import { QueryCommand, GetCommand, PutCommand } from "@aws-sdk/lib-dynamodb"
+import { QueryCommand, GetCommand, PutCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb"
 import type { Channel, Message } from "shared"
-import { messageSchema, createChannelSchema } from "shared"
+import { messageSchema, createChannelSchema} from "shared"
 import { db, tableName } from "../data/dynamoDb.js"
 import { summarize } from "../data/gemini.js"
 import { requireAuth } from "../middleware.js"
@@ -177,6 +177,36 @@ router.get("/:channelId/summary", async (req: Request<ChannelParams>, res: Respo
 		console.error("Gemini-fel:", error)
 		res.status(502).send({ error: "Tjänsten för sammanfattning är inte tillgänglig just nu. Försök igen senare." })
 	}
+})
+
+
+
+//DELETE
+router.delete("/:channelId", requireAuth, async (req: Request<ChannelParams>, res: Response) => {
+	const {channelId} = req.params
+
+	const channel = await getChannel(channelId)
+	if(!channel) {
+		res.status(400).send({error: "Kanalen finns inte"})
+		return
+	}
+
+	if (channel.creatorId !== res.locals.user.userId) {
+		res.status(403).send({error: "Du har inte behörighet att ta bort den här kanalen"})
+		return
+	}
+
+	const messages = await getChannelMessages(channelId)
+	await Promise.all(messages.map(m => db.send(new DeleteCommand ({
+		TableName: tableName,
+		Key: { pk: `CHANNEL#${channelId}`, sk: `MSG#${m.createdAt}#${m.messageId}`}
+	}))))
+
+	await db.send (new DeleteCommand ({
+		TableName: tableName,
+		Key: { pk: "CHANNEL", sk: `CHANNEL#${channelId}`}
+	}))
+	res.status(204).end()
 })
 
 export default router

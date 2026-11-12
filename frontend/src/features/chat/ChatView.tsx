@@ -5,6 +5,7 @@ import { ChannelHeader } from "./ChannelHeader"
 import { MessageList } from "./MessageList"
 import { MessageInput } from "./MessageInput"
 import { useAuthStore } from "../../store/authStore"
+import { ChannelSettings } from "./ChannelSettings"
 import "./chat.css"
 
 export type Conversation =
@@ -27,6 +28,7 @@ export function ChatView() {
 	const [sentIds, setSentIds] = useState<string[]>([])
 	const [summary, setSummary] = useState("")
 	const [summaryLoading, setSummaryLoading] = useState(false)
+	const [showSettings, setShowSettings] = useState(false)
 	const user = useAuthStore(state => state.user)
 	const token = useAuthStore(state => state.token)
 
@@ -124,6 +126,27 @@ export function ChatView() {
 		return null
 	}
 
+	//Ta bort kanal
+	async function handleDeleteChannel(): Promise<string | null> {
+		if (active?.type !== "channel") return null
+		const channelId = active.channel.channelId
+
+		const response = await fetch(`/api/channels/${channelId}`, {
+			method: "DELETE",
+			headers: authHeader
+		})
+
+		if (!response.ok) {
+			const data = await response.json()
+			return data.error ?? "Kunde inte ta bort kanalen"
+		}
+
+		const remaining = channels.filter(c => c.channelId !== channelId)
+		setChannels(remaining)
+		setActive(remaining[0] ? { type: "channel", channel: remaining[0] } : null)
+		return null
+	}
+
 	// Text i skrivfältet
 	const placeholder = !active
 		? ""
@@ -149,7 +172,14 @@ export function ChatView() {
 									channel={active.channel}
 									onSummarize={handleSummarize}
 									loading={summaryLoading}
+									onOpenSettings={()=> setShowSettings(true)}
 								/>
+								{showSettings && (
+									<ChannelSettings
+									channel={active.channel}
+									onClose={() => setShowSettings(false)}
+									onDelete={handleDeleteChannel}/>
+								)}
 								{summary && (
 									<div className="summary-card">
 										<div className="summary-head">

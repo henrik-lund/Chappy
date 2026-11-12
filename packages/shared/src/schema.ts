@@ -19,6 +19,7 @@ export const createChannelSchema = z.object ({
 	isLocked: z.boolean().default(false)
 })
 
+
 //---------------- Meddelanden --------------
 
 export const messageSchema = z.object({
