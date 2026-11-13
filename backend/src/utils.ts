@@ -24,3 +24,11 @@ export function getAwsConfig() {
 export function getTableName(): string {
 	return getEnv('TABLE_NAME')
 }
+
+export function getJwtSecret(): string {
+	return getEnv('JWT_SECRET')
+}
+
+export function getGeminiKey(): string {
+	return getEnv('GEMINI_API_KEY')
+}
