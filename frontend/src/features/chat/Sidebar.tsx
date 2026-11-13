@@ -1,10 +1,14 @@
 import { useNavigate } from "react-router"
-import { useState, type FormEvent } from "react"
+import { useState } from "react"
+import type { SubmitEvent } from "react"
 import type { Channel, User } from "shared"
 import { createChannelSchema } from "shared"
 import type { Conversation } from "./ChatView"
 import { useAuthStore } from "../../store/authStore"
+import { AccountSettings } from "../account/AccountSettings" 
 import logo from "../../assets/logo.svg"
+import settings from "../../assets/settings.svg"
+import logoutIcon from "../../assets/logout.svg"
 
 type Props = {
 	channels: Channel[]
@@ -17,15 +21,17 @@ type Props = {
 export function Sidebar({ channels, users, active, onSelect, onCreateChannel }: Props) {
 	const navigate = useNavigate()
 	const user = useAuthStore(state => state.user)
+	const token = useAuthStore(state => state.token)   
 	const logout = useAuthStore(state => state.logout)
-
-
 	const [showForm, setShowForm] = useState(false)
 	const [newName, setNewName] = useState("")
-	const [newLocked, setNewLocked] = useState (false)
-	const [formError, setFormError] = useState ("")
+	const [newLocked, setNewLocked] = useState(false)
+	const [formError, setFormError] = useState("")
 
-	// Visa inte mig själv i DM-listan
+	
+	const [showAccount, setShowAccount] = useState(false)
+
+
 	const otherUsers = users.filter(u => u.userId !== user?.userId)
 
 	function handleLogout() {
@@ -33,17 +39,35 @@ export function Sidebar({ channels, users, active, onSelect, onCreateChannel }: 
 		navigate("/")
 	}
 
-	async function handleCreate(event: FormEvent) {
+
+	async function handleDeleteAccount(): Promise<string | null> {
+		const response = await fetch("/api/users/me", {
+			method: "DELETE",
+			headers: { Authorization: `Bearer ${token}` }
+		})
+
+		if (!response.ok) {
+			const data = await response.json()
+			return data.error ?? "Kunde inte ta bort kontot"
+		}
+
+		setShowAccount(false)
+		logout()
+		navigate("/")
+		return null
+	}
+
+	async function handleCreate(event: SubmitEvent<HTMLFormElement>) {
 		event.preventDefault()
 
-		const parsed = createChannelSchema.safeParse ({ name: newName, isLocked: newLocked })
+		const parsed = createChannelSchema.safeParse({ name: newName, isLocked: newLocked })
 		if (!parsed.success) {
 			setFormError(parsed.error.issues[0]?.message ?? "Ogiltigt namn")
 			return
 		}
-		
+
 		const error = await onCreateChannel(parsed.data.name, parsed.data.isLocked)
-		if(error) {
+		if (error) {
 			setFormError(error)
 			return
 		}
@@ -62,7 +86,6 @@ export function Sidebar({ channels, users, active, onSelect, onCreateChannel }: 
 					<span>Chappy</span>
 				</div>
 
-			
 				<section>
 					<div className="sidebar-title-row">
 						<h2 className="sidebar-title">Kanaler</h2>
@@ -72,7 +95,7 @@ export function Sidebar({ channels, users, active, onSelect, onCreateChannel }: 
 								onClick={() => setShowForm(!showForm)}
 								aria-label="Skapa kanal"
 							>
-								{showForm ? "x" : "+"}
+								{showForm ? "×" : "+"}
 							</button>
 						)}
 					</div>
@@ -98,7 +121,7 @@ export function Sidebar({ channels, users, active, onSelect, onCreateChannel }: 
 							<button type="submit">Skapa</button>
 						</form>
 					)}
-					
+
 					{channels.map(channel => {
 						const isActive = active?.type === "channel" && active.channel.channelId === channel.channelId
 						return (
@@ -114,7 +137,6 @@ export function Sidebar({ channels, users, active, onSelect, onCreateChannel }: 
 					})}
 				</section>
 
-				
 				<section>
 					<h2 className="sidebar-title">Direktmeddelanden</h2>
 					{otherUsers.map(u => {
@@ -133,16 +155,33 @@ export function Sidebar({ channels, users, active, onSelect, onCreateChannel }: 
 				</section>
 			</div>
 
-			
 			{user ? (
-				<div className="user-card">
-					<span className="avatar">{user.username.slice(0, 2).toUpperCase()}</span>
-					<div className="user-info">
-						<strong>{user.username}</strong>
-						<span>● Inloggad</span>
+				<>
+					<div className="user-card">
+						<span className="user-avatar">{user.username.slice(0, 2).toUpperCase()}</span>
+
+						<div className="user-info">
+							<strong>{user.username}</strong>
+							<span><i className="online-dot" /> Inloggad</span>
+						</div>
+
+						<button className="icon-btn" onClick={() => setShowAccount(true)} aria-label="Kontoinställningar" title="Kontoinställningar">
+							<img src={settings} alt="" />
+						</button>
+
+						<button className="icon-btn boxed" onClick={handleLogout} aria-label="Logga ut" title="Logga ut">
+							<img src={logoutIcon} alt="" />
+						</button>
 					</div>
-					<button className="logout-btn" onClick={handleLogout}>Logga ut</button>
-				</div>
+
+					{showAccount && (
+						<AccountSettings
+							username={user.username}
+							onClose={() => setShowAccount(false)}
+							onDelete={handleDeleteAccount}
+						/>
+					)}
+				</>
 			) : (
 				<div className="guest-card">
 					<p>Du är gäst. Logga in för att läsa låsta kanaler och skicka DM.</p>

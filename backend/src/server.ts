@@ -23,6 +23,9 @@ app.use("/api/auth", authRouter)
 app.use("/api/channels", channelRouter)
 app.use("/api/dm", dmRouter)
 
+app.use((req, res) => {
+	res.sendFile("index.html", { root: distPath })
+})
 
 app.listen(port, () =>{
 	console.log(`Server is listening on port ${port}`)
