@@ -1,35 +1,51 @@
-# React + TypeScript + Vite
+Chappy 
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Chappy är en chattapp där man kan skriva i kanaler och skicka direktmeddelanden. Kanaler kan vara öppna för alla eller låsta för inloggade användare. En AI-funktion sammanfattar konversationen i en kanal.
 
-Currently, two official plugins are available:
+Publicerad app: https://chappy-uzji.onrender.com
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Funktioner
+Läsa och skriva i öppna kanaler, även som gäst
+Registrera konto och logga in
+Läsa och skriva i låsta kanaler som inloggad
+Skicka direktmeddelanden till andra användare som inloggad
+AI-sammanfattning av konversationen i en kanal
+Skapa kanal, öppen eller låst
+Ta bort kanaler som man själv har skapat
+Ta bort sitt eget konto
+Tekniker
+Frontend: React, TypeScript, Vite, React Router, Zustand
+Backend: Node.js, Express, TypeScript
+Databas: AWS DynamoDB
+Inloggning: JWT och bcrypt för hashade lösenord
+Validering: Zod, delad mellan frontend och backend
+AI: Google Gemini
+Publicering: Render
+Installation och start
 
-## React Compiler
+bash
+git clone https://github.com/henrik-lund/Chappy.git
+cd Chappy
+npm install
+npm run restart-server
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+Öppna sedan http://localhost:3001
 
-Note: This will impact Vite dev & build performances.
-You can also try [the experimental native React Compiler support in plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md#rust-react-compiler) by using `compiler: true` in the plugin options instead of using the Babel plugin.
+Environment-variabler
 
-## Expanding the Oxlint configuration
+Appen behöver en .env-fil i rotmappen med följande:
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+PORT=3001
+ACCESS_KEY=
+SECRET_ACCESS_KEY=
+AWS_REGION=eu-north-1
+TABLE_NAME=chappy
+JWT_SECRET=
+GEMINI_API_KEY=
+GEMINI_MODEL=gemini-3.6-flash
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
-```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Gratisversionen av Render kan ta upp till en minut att starta första gången appen öppnas.
+Gäster kan läsa och skriva i öppna kanaler. Låsta kanaler och direktmeddelanden kräver inloggning.
+Knappen Kanalinställningar, där man tar bort en kanal, syns bara för den som skapat kanalen.
+Kontoinställningar öppnas med kugghjulet vid användarnamnet längst ner i sidomenyn.
